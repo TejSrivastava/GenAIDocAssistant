@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gen AI Document Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-section, .output-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .input-section h2, .output-section h2 {
+            color: #495057;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #4facfe;
+            padding-bottom: 10px;
+        }
+
+        .query-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+
+        .query-input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .examples {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .examples h3 {
+            margin-bottom: 10px;
+            color: #1a73e8;
+        }
+
+        .example-btn {
+            background: #4facfe;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .example-btn:hover {
+            background: #3b99fc;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .output-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .output-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .output-item h4 {
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .output-item p {
+            color: #6c757d;
+            line-height: 1.5;
+        }
+
+        .error {
+            background: #ffe6e6;
+            border-left: 4px solid #dc3545;
+            color: #dc3545;
+        }
+
+        .success {
+            background: #e6ffe6;
+            border-left: 4px solid #28a745;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Gen AI Document Assistant</h1>
+            <p>Ask anything about your document and get AI-powered responses</p>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <h2>📝 Ask a Question</h2>
+                
+                <div class="examples">
+                    <h3>💡 Try these examples:</h3>
+                    <button class="example-btn" onclick="setQuery('Summarize this document')">Summarize</button>
+                    <button class="example-btn" onclick="setQuery('Translate to Hindi')">Translation</button>
+                    <button class="example-btn" onclick="setQuery('What are large language models?')">Question</button>
+                    <button class="example-btn" onclick="setQuery('Extract key points')">Key Points</button>
+                    <button class="example-btn" onclick="setQuery('Analyze sentiment')">Sentiment</button>
+                    <button class="example-btn" onclick="setQuery('Extract entities')">Entities</button>
+                </div>
+
+                <input type="text" class="query-input" id="queryInput" placeholder="Ask something about the document..." onkeypress="handleKeyPress(event)">
+                
+                <button class="submit-btn" onclick="sendQuery()" id="submitBtn">🚀 Process Query</button>
+                
+                <div class="loading" id="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Processing your query...</p>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <h2>📊 Response</h2>
+                <div class="output-content" id="outputContent">
+                    <div class="output-item">
+                        <h4>👋 Welcome!</h4>
+                        <p>Enter a query to start analyzing your document. You can ask for summaries, translations, or specific questions about the content.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Powered by AWS Lambda, Bedrock, Translate, and Comprehend</p>
+        </div>
+    </div>
+
+    <script>
+
+        const API_URL = 'https://p0zbipwpj6.execute-api.ap-south-1.amazonaws.com/demo/query';
+
+        function setQuery(query) {
+            document.getElementById('queryInput').value = query;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendQuery();
+            }
+        }
+
+        async function sendQuery() {
+            const query = document.getElementById('queryInput').value.trim();
+            const outputContent = document.getElementById('outputContent');
+            const loading = document.getElementById('loading');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (!query) {
+                showError('Please enter a query first');
+                return;
+            }
+
+            // Show loading state
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+            outputContent.innerHTML = '';
+
+            try {
+                console.log('🚀 Sending request to:', API_URL);
+                console.log('Query:', query);
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+
+                console.log('Response status:', response.status);
+                
+                // First, get the raw response
+                const responseData = await response.json();
+                console.log('Raw response:', responseData);
+
+                // Check if the response has a body field (API Gateway format)
+                if (responseData.body) {
+                    // Parse the body string as JSON
+                    const actualData = JSON.parse(responseData.body);
+                    console.log('Parsed data:', actualData);
+                    
+                    if (actualData.success) {
+                        displayResponse(actualData);
+                    } else {
+                        showError(actualData.error || 'Something went wrong');
+                    }
+                } else {
+                    // Direct response (for testing)
+                    if (responseData.success) {
+                        displayResponse(responseData);
+                    } else {
+                        showError(responseData.error || 'Something went wrong');
+                    }
+                }
+            } catch (error) {
+                console.error('Error details:', error);
+                showError('Failed to process response. Check console for details.');
+            } finally {
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayResponse(data) {
+            const outputContent = document.getElementById('outputContent');
+            let html = '';
+
+            // Check if we have the nested structure
+            const outputs = data.outputs || data;
+            const plan = data.plan || [];
+            const query = data.query || 'Unknown query';
+            const documentName = data.document || data.document_name || 'Intro_To_GenAI.txt';
+
+            html += `
+                <div class="output-item">
+                    <h4>📄 Document: ${escapeHtml(documentName.split('/').pop())}</h4>
+                    <p><strong>Query:</strong> ${escapeHtml(query)}</p>
+                </div>
+            `;
+
+            // Display the final answer
+            if (outputs.final_answer) {
+                html += `
+                    <div class="output-item success">
+                        <h4>✅ Final Answer</h4>
+                        <p>${escapeHtml(outputs.final_answer)}</p>
+                    </div>
+                `;
+            }
+
+            // Display other outputs if available
+            if (outputs.summary) {
+                html += `
+                    <div class="output-item">
+                        <h4>📋 Summary</h4>
+                        <p>${escapeHtml(outputs.summary)}</p>
+                    </div>
+                `;
+            }
+
+            if (outputs.answer) {
+                html += `
+                    <div class="output-item">
+                        <h4>❓ Question Answer</h4>
+                        <p>${escapeHtml(outputs.answer)}</p>
+                    </div>
+                `;
+            }
+
+            if (outputs.full_translation_hi || outputs.full_translation_es || outputs.full_translation_mr) {
+                let translationText = '';
+                if (outputs.full_translation_hi) translationText = outputs.full_translation_hi;
+                if (outputs.full_translation_es) translationText = outputs.full_translation_es;
+                if (outputs.full_translation_mr) translationText = outputs.full_translation_mr;
+                
+                html += `
+                    <div class="output-item">
+                        <h4>🌐 Translation</h4>
+                        <p>${escapeHtml(translationText)}</p>
+                    </div>
+                `;
+            }
+
+            if (outputs.key_points) {
+                html += `
+                    <div class="output-item">
+                        <h4>🔑 Key Points</h4>
+                        <p>${escapeHtml(outputs.key_points)}</p>
+                    </div>
+                `;
+            }
+
+            if (outputs.entities && typeof outputs.entities === 'object') {
+                let entitiesHtml = '';
+                for (const [type, entities] of Object.entries(outputs.entities)) {
+                    if (Array.isArray(entities)) {
+                        entitiesHtml += `<strong>${type}:</strong> ${entities.join(', ')}<br>`;
+                    }
+                }
+                if (entitiesHtml) {
+                    html += `
+                        <div class="output-item">
+                            <h4>🏷️ Entities Found</h4>
+                            <p>${entitiesHtml}</p>
+                        </div>
+                    `;
+                }
+            }
+
+            // Display execution plan
+            if (plan.length > 0) {
+                html += `
+                    <div class="output-item">
+                        <h4>⚡ Execution Plan</h4>
+                        <p>Tools used: ${plan.join(' → ')}</p>
+                    </div>
+                `;
+            }
+
+            outputContent.innerHTML = html;
+        }
+
+        function showError(message) {
+            const outputContent = document.getElementById('outputContent');
+            outputContent.innerHTML = `
+                <div class="output-item error">
+                    <h4>❌ Error</h4>
+                    <p>${escapeHtml(message)}</p>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            if (typeof text !== 'string') return text;
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;')
+                .replace(/\n/g, '<br>')
+                .replace(/\r/g, '');
+        }
+    </script>
+</body>
+</html>
